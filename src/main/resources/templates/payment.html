@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" data-bs-theme="dark">
+<head>
+    <title th:text="${title}">Payment</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body class="bg-dark text-light">
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="display-5"><img width="50" height="50" src="https://cryptologos.cc/logos/monero-xmr-logo.png"> <strong>Monero Payment</strong></h1>
+            <p class="lead">Secure and private transactions</p>
+        </div>
+
+        <!-- Payment Information Card -->
+        <div class="card shadow-sm bg-secondary text-light">
+
+            <div class="card-body">
+                <h4 class="card-title"><i class="bi bi-receipt"></i>&nbsp;Order ID</h4>
+                <div class="alert alert-dark text-center" role="alert">
+                    <span class="card-text text-light" id="paymentId" th:text="${txId}"></span>
+                </div>
+
+                <h4 class="card-title"><i class="bi bi-cash-coin"></i>&nbsp;Order Amount</h4>
+                <div class="alert alert-dark text-center" role="alert">
+                    <span class="card-text text-light" id="orderAmount" th:text="${amountUsd}"></span>
+                </div>
+
+                <h4 class="card-title"><i class="bi bi-info-circle"></i>&nbsp;Payment Status</h4>
+                <div id="paidBody" class="alert alert-success text-center" role="alert" hidden>
+                    <i class="bi bi-check-circle"></i> Successfully paid <span th:text="${amountXmr}">amount</span>
+                </div>
+                <div id="cancelledBody" class="alert alert-danger text-center" role="alert" hidden>
+                    <i class="bi bi-exclamation-triangle"></i> Payment was cancelled
+                </div>
+                <div id="expiredBody" class="alert alert-dark text-center" role="alert" hidden>
+                    <i class="bi bi-clock-history text-center"></i> Payment expired
+                </div>
+                <div id="waitingBody" class="alert alert-dark text-center" role="alert" hidden>
+                    <div class="spinner-grow spinner-grow-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Waiting for confirmation...
+                </div>
+                <div id="unpaidBody">
+                    <div id="waitingForPayment" class="alert alert-dark text-center" role="alert">
+                        <div class="spinner-grow spinner-grow-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Waiting for payment (time remaining <span id="timer">00:00</span>)...
+                    </div>
+
+                    <div id="partiallyPaid" class="alert alert-dark text-center" role="alert" hidden>
+                        <div class="spinner-grow spinner-grow-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Partially paid
+                    </div>
+
+                    <h4 class="card-title"><i class="bi bi-wallet2"></i>&nbsp;Payment Instructions</h4>
+                    <div class="alert alert-dark text-center" role="alert">
+                        Deposit exactly <span id="amountToPay" class="badge text-bg-primary" th:text="${amountXmr}">amount</span> to the following address:
+                        <br>
+                        <br>
+                        <div class="text-center mb-4">
+                            <canvas id="qrcode"></canvas>
+                        </div>
+                        <span th:text="${address}" id="paymentAddress">address</span>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Hidden Data (if needed) -->
+        <div hidden>
+            <span id="returnUrl" th:text="${returnUrl}" hidden></span>
+            <span id="status" tx:text="${status}" hidden></span>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const address = document.getElementById('paymentAddress').textContent;
+        QRCode.toCanvas(document.getElementById('qrcode'), address, {
+            width: 200,
+            colorDark: "#ffffff",
+            colorLight: "#343a40"
+        }, function (error) {
+            if (error) console.error(error);
+        });
+    });
+    var refreshInterval = null;
+    var refreshing = false;
+
+    function hideElement(id) {
+        const elem = document.getElementById(id);
+
+        if (!elem) {
+            console.warn("Element " + id + " not found");
+            return;
+        }
+
+        elem.hidden = true;
+    }
+    
+    function showElement(id) {
+        const elem = document.getElementById(id);
+
+        if (!elem) {
+            console.warn("Element " + id + " not found");
+            return;
+        }
+
+        elem.hidden = false;
+    }
+
+    function getBaseUrl() {
+        return `${window.location.origin}/v1/monero/ecwid`;
+    }
+
+    function getPaymentUrl() {
+        return `${getBaseUrl()}/getPayment`;
+    }
+
+    function getElementText(id) {
+        const element = document.getElementById(id);
+        
+        if (!element) {
+            console.warn(id + " element not found");
+            return '';
+        }
+        
+        const res = element.textContent;
+
+        console.log(id + " found: " + res);
+
+        return res;
+    }
+
+    function setElementText(id, content) {
+        const element = document.getElementById(id);
+
+        if (!element) {
+            console.warn(id + " element not found");
+            return '';
+        }
+
+        element.textContent = content;
+    }
+
+    function getPaymentId() {
+        return getElementText("paymentId");
+    }
+
+    function getReturnUrl() {
+        return getElementText("returnUrl");
+    }
+
+    async function getPayment() {
+        const url = getPaymentUrl();
+
+        const req = new XMLHttpRequest();
+
+        const promise = new Promise((resolve, reject) => {
+            req.onload = (ev) => {
+                if (ev.target && typeof ev.target.response === 'string') {
+                    resolve(JSON.parse(ev.target.response));
+                }
+                else {
+                    reject(new Error("Unknown"));
+                }
+            };
+        });
+
+        req.open('POST', url, true);
+        req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+        req.send(`id=${getPaymentId()}`);
+
+        const result = await promise;
+
+        return result;
+    }
+
+    async function refresh() {
+        if (refreshing) {
+            return;
+        }
+
+        let err = null;
+        
+        try {
+            const payment = await getPayment();
+            const partiallyPaid = payment.status === 'UNPAID' && payment.amountDeposited != 0 && payment.amountDeposited < payment.amountXmr;
+            const amountToDeposit = payment.amountDeposited === 0 ? payment.amountXmr : payment.amountXmr > payment.amountDeposited ? payment.amountXmr - payment.amountDeposited : 0;
+
+            setElementText('amountToPay', `${amountToDeposit}`);
+
+            if (partiallyPaid) {
+                payment.status = 'PARTIALLY_PAID';
+            }
+
+            console.log(payment);
+
+            if (payment.status === 'PAID') {
+                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
+                hideElement('unpaidBody');
+                showElement('paidBody');
+                clearInterval(refreshInterval);
+                return;
+            }
+            else if (payment.status === 'EXPIRED') {
+                hideElement('unpaidBody');
+                showElement('expiredBody');
+                clearInterval(refreshInterval);
+                return;
+            }
+            else if (payment.status === 'CANCELLED') {
+                hideElement('unpaidBody');
+                showElement('cancelledBody');
+                clearInterval(refreshInterval);
+                return;
+            }
+            else if (payment.status === 'WAITING') {
+                hideElement('unpaidBody');
+                showElement('waitingBody');
+                clearInterval(refreshInterval);
+                return;
+            }
+            else if (payment.status === 'PARTIALLY_PAID') {
+                hideElement('waitingForPayment');
+                showElement('partiallyPaid');
+                return;
+            }
+        }
+        catch (error) {
+            err = error;
+        }
+        
+        refreshing = false;
+
+        if (err) {
+            throw err;
+        }
+    }
+
+    let timeRemaining = 60 * 15;
+
+    // Aggiorna il timer
+    function updateTimer() {
+        const timerElement = document.getElementById("timer");
+        const minutes = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        const seconds = (timeRemaining % 60).toString().padStart(2, '0');
+        timerElement.textContent = `${minutes}:${seconds}`;
+        
+        if (timeRemaining > 0) {
+            timeRemaining--;
+        } else {
+            clearInterval(timerInterval);
+        }
+    }
+
+    // Avvia il timer
+    let timerInterval = setInterval(updateTimer, 1000);
+
+    setTimeout(() => {
+        refreshInterval = setInterval(async () => {
+        try {
+            await refresh();
+        }
+        catch(error) {
+            console.error(error);
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+    }, 5000);
+    }, 5000);
+
+</script>
+</html>
