@@ -1,7 +1,6 @@
 package monero.ecwid.server.utils;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -22,30 +21,6 @@ public class WalletListener extends MoneroWalletListener {
 
     public WalletListener(PaymentRequestService paymentRequestService) {
         this.paymentRequestService = paymentRequestService;
-    }
-
-    private void refreshPaymentRequests() {
-        List<PaymentRequestEntity> requests = paymentRequestService.repository.findAll();
-
-        for (PaymentRequestEntity paymentRequest : requests) {
-            String txId = paymentRequest.getTxId();
-            
-            if (paymentRequest.getStatus().equals("UNPAID") && paymentRequest.isExpired()) {
-                EcwidStoreService storeService = EcwidStoreService.getService(paymentRequest.getStoreId(), paymentRequest.getStoreToken());
-                
-                try {
-                    storeService.setOrderCancelled(txId);
-
-                    logger.info("Setting tx " + txId + " as expired");
-                    paymentRequest.setStatus("EXPIRED");
-                    paymentRequestService.repository.save(paymentRequest);
-                }
-                catch (Exception e) {
-                    logger.error("Could not set order cancelled", e);
-                }
-            }
-        
-        }
     }
 
     private void processOutputTx(MoneroOutputWallet output) {
@@ -130,9 +105,11 @@ public class WalletListener extends MoneroWalletListener {
     }
 
     @Override
+    public void onNewBlock(long height) {
+    }
+
+    @Override
     public void onSyncProgress(long height, long startHeight, long endHeight, double percentDone, String message) {
         logger.info(message + " " + percentDone*100 + "%");
-
-        refreshPaymentRequests();
     }
 }
