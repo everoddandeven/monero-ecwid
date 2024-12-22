@@ -17,24 +17,31 @@ public class DataSourceConfig {
     public DataSourceConfig() {
     }
 
-    @Bean
-    public DataSource dataSource() {
-        ServerConfig config;
-
+    private static ServerConfig getServerConfig() {
         try {
-            config = ServerConfigFileReader.read();
+            return ServerConfigFileReader.read();
         }
         catch (IOException e) {
             logger.error("Config file not found");
-            config = new ServerConfig();
+            return new ServerConfig();
         }
+    }
+
+    public static String getDataSourceUrl() {
+        ServerConfig config = getServerConfig();
 
         String host = config.dbHost;
         String port = config.dbPort.toString();
+        return String.format("jdbc:mysql://%s:%s/monero_ecwid", host, port);
+    }
+
+    @Bean
+    public DataSource dataSource() {
+        ServerConfig config = getServerConfig();
+
         String username = config.dbUsername;
         String password = config.dbPassword;
-
-        String url = String.format("jdbc:mysql://%s:%s/monero_ecwid", host, port);
+        String url = getDataSourceUrl();
 
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
