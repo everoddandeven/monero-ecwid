@@ -40,6 +40,35 @@ jobs:
         sudo apt-get update
         sudo apt install -y build-essential cmake pkg-config libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libexpat1-dev libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev libboost-locale-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev python3 ccache doxygen graphviz nettle-dev libevent-dev
 
+    - name: Install expat depencency
+      run: |
+        cd ~
+        wget https://github.com/libexpat/libexpat/releases/download/R_2_4_8/expat-2.4.8.tar.bz2
+        tar -xf expat-2.4.8.tar.bz2
+        sudo rm expat-2.4.8.tar.bz2
+        cd expat-2.4.8
+        ./configure --enable-static --disable-shared
+        make
+        sudo make install
+        cd ../
+    
+    - name: Install unbound dependency
+      run: |
+        cd ~
+        wget https://www.nlnetlabs.nl/downloads/unbound/unbound-1.19.0.tar.gz
+        tar xzf unbound-1.19.0.tar.gz
+        sudo apt update
+        sudo apt install -y build-essential
+        sudo apt install -y libssl-dev
+        sudo apt install -y libexpat1-dev
+        sudo apt-get install -y bison
+        sudo apt-get install -y flex
+        cd unbound-1.19.0
+        ./configure --with-libexpat=/usr --with-ssl=/usr --enable-static-exe
+        make
+        sudo make install
+        cd ../
+
     - name: Build Server
       run: mvn clean package
 
