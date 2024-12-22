@@ -50,6 +50,8 @@ public class PaymentRequest {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
+    private Long blokchainHeight = 0l;
+
     public String getTxId() {
         return txId;
     }
@@ -196,6 +198,14 @@ public class PaymentRequest {
         }
 
         return true;
+    }
+
+    public Long getBlockchainHeight() {
+        return blokchainHeight;
+    }
+
+    public void setBlockchainHeight(Long value) {
+        blokchainHeight = value;
     }
 
 }

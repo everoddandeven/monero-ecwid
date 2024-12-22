@@ -21,6 +21,9 @@ public class MoneroTransaction {
     @Column(name = "amount", nullable = false)
     private BigInteger amount;
 
+    @Column(name = "height", nullable = false)
+    private Long height;
+
     public String getTxHash() {
         return txHash;
     }
@@ -35,6 +38,14 @@ public class MoneroTransaction {
 
     public void setTxId(String value) {
         txId = value;
+    }
+
+    public Long getHeight() {
+        return height;
+    }
+
+    public void setHeight(Long value) {
+        height = value;
     }
 
     public BigInteger getAmount() {

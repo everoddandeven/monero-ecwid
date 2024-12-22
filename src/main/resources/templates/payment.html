@@ -206,7 +206,7 @@
             const partiallyPaid = payment.status === 'UNPAID' && payment.amountDeposited != 0 && payment.amountDeposited < payment.amountXmr;
             const amountToDeposit = payment.amountDeposited === 0 ? payment.amountXmr : payment.amountXmr > payment.amountDeposited ? payment.amountXmr - payment.amountDeposited : 0;
 
-            setElementText('amountToPay', `${amountToDeposit}`);
+            setElementText('amountToPay', `${amountToDeposit / 1e12} XMR`);
 
             if (partiallyPaid) {
                 payment.status = 'PARTIALLY_PAID';
@@ -222,12 +222,14 @@
                 return;
             }
             else if (payment.status === 'EXPIRED') {
+                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
                 hideElement('unpaidBody');
                 showElement('expiredBody');
                 clearInterval(refreshInterval);
                 return;
             }
             else if (payment.status === 'CANCELLED') {
+                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
                 hideElement('unpaidBody');
                 showElement('cancelledBody');
                 clearInterval(refreshInterval);

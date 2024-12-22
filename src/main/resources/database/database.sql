@@ -2,6 +2,14 @@ DROP DATABASE IF EXISTS `monero_ecwid`;
 CREATE DATABASE `monero_ecwid`;
 USE `monero_ecwid`;
 
+CREATE TABLE `wallet_config` (
+	`id` VARCHAR(255) NOT NULL,
+    `address` VARCHAR(255) NOT NULL,
+    `view_key` VARCHAR(255) NOT NULL,
+    `confirmations_required` BIGINT NOT NULL DEFAULT 10,    
+    PRIMARY KEY (`id`)
+);
+
 CREATE TABLE `payment_requests` (
 	`tx_id` VARCHAR(255) NOT NULL,
     `store_id` INT NOT NULL,
@@ -21,9 +29,14 @@ CREATE TABLE `payment_requests` (
 
 CREATE TABLE `monero_transactions` (
 	`tx_hash` VARCHAR(255),
+    `height` BIGINT NOT NULL,
 	`tx_id` VARCHAR(255),
     `amount` BIGINT NOT NULL CHECK (`amount` > 0),
     PRIMARY KEY (`tx_hash`),
     FOREIGN KEY (`tx_id`) REFERENCES `payment_requests`(`tx_id`)
 );
 
+
+INSERT INTO `wallet_config`(`id`, `address`, `view_key`, `confirmations_required`) VALUES 
+('prod', '', '', 10),
+('dev', '', '', 10);

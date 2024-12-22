@@ -6,13 +6,20 @@ CREATE TRIGGER `update_amount_deposited`
 AFTER INSERT ON `monero_transactions`
 FOR EACH ROW
 BEGIN
-	UPDATE `payment_requests`
-    SET `amount_deposited` = `amount_deposited` + NEW.`amount`
+
+	DECLARE `amount_dep` BIGINT DEFAULT 0;
+	DECLARE `new_sum` BIGINT DEFAULT 0;
+    
+    SELECT `amount_deposited` INTO `amount_dep`
+    FROM `payment_requests`
     WHERE `tx_id` = NEW.`tx_id`;
     
-    UPDATE `payment_requests`
-    SET `status` = 'PAID'
-    WHERE `tx_id` = NEW.`tx_id` AND `amount_deposited` >= `amount_xmr`;
+    SET `new_sum` = `amount_dep` + NEW.`amount`;
+    
+	UPDATE `payment_requests`
+    SET `amount_deposited` = `new_sum`
+    WHERE `tx_id` = NEW.`tx_id`;
+
 END $$
 
 DELIMITER ;

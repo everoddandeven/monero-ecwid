@@ -138,7 +138,11 @@ public class GatewayController {
         Optional<PaymentRequest> req = paymentRequestService.repository.findById(id);
 
         if (req.isPresent()) {
-            return req.get();
+            PaymentRequest paymentReq = req.get();
+
+            paymentReq.setBlockchainHeight(paymentRequestService.wallet.getDaemonHeight());
+
+            return paymentReq;
         }
 
         throw new Exception("Request " + id + " not found");

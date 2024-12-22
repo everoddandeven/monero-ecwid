@@ -22,6 +22,9 @@ public class PaymentRequestService {
     public final PaymentRequestRepository repository;
     @Autowired
     public final MoneroTransactionRepository transactionRepository;
+    @Autowired
+    public final WalletConfigRepository configRepository;
+
     public final MoneroWalletFull wallet;
     private static final Logger logger = LoggerFactory.getLogger(PaymentRequestService.class);
 
@@ -59,6 +62,7 @@ public class PaymentRequestService {
 
         private void processOutputTx(MoneroOutputWallet output) {
             BigInteger amount = output.getAmount();
+            Long height = output.getTx().getHeight();
             String txHash = output.getTx().getHash();
             Boolean isConfirmed = output.getTx().isConfirmed();
             Boolean isLocked = output.getTx().isLocked();
@@ -67,6 +71,13 @@ public class PaymentRequestService {
             Optional<MoneroTransaction> moneroTransaction = this.paymentRequestService.transactionRepository.findById(txHash);
 
             if (!moneroTransaction.isEmpty()) {
+                MoneroTransaction tx = moneroTransaction.get();
+
+                if (tx.getHeight().equals(0l) && isConfirmed) {
+                    tx.setHeight(height);
+                    this.paymentRequestService.transactionRepository.save(tx);
+                }
+
                 logger.info("output already processed " + amount + ", tx hash: " + txHash + ", confirmed: " + isConfirmed + ", is locked: " + isLocked);
                 return;
             }
@@ -98,6 +109,13 @@ public class PaymentRequestService {
             transaction.setTxHash(txHash);
             transaction.setTxId(req.getTxId());
             transaction.setAmount(amount);
+            
+            if (isConfirmed) {
+                transaction.setHeight(height);
+            }
+            else {
+                transaction.setHeight(0l);
+            }
             
             // Send update status to ecwid before redirect
 
@@ -133,12 +151,13 @@ public class PaymentRequestService {
 
     private MoneroWalletListener walletListener;
 
-    public PaymentRequestService(PaymentRequestRepository repository, MoneroTransactionRepository transactionRepository) {
+    public PaymentRequestService(PaymentRequestRepository repository, MoneroTransactionRepository transactionRepository, WalletConfigRepository configRepository) {
         this.repository = repository;
         this.wallet = WalletUtils.getWallet();
         this.walletListener = new WalletListener(this);
         this.wallet.addListener(walletListener);
         this.transactionRepository = transactionRepository;
+        this.configRepository = configRepository;
     }
 
     public List<PaymentRequest> getAll() {
