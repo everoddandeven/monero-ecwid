@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import monero.daemon.model.MoneroNetworkType;
+import monero.ecwid.server.config.ServerConfig;
+import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.wallet.MoneroWalletFull;
 import monero.wallet.model.MoneroSubaddress;
 import monero.wallet.model.MoneroWalletConfig;
@@ -13,21 +15,54 @@ import monero.wallet.model.MoneroWalletConfig;
 public abstract class WalletUtils {
     private static final Logger logger = LoggerFactory.getLogger(WalletUtils.class);
 
+    private static String STAGENET_NODE = "http://node2.monerodevs.org:38089";
+    private static String TESTNET_NODE = "http://node2.monerodevs.org:28089";
+    private static String MAINNET_NODE = "http://node.monerodevs.org:18089";
+
     private static MoneroWalletFull wallet = null;
     private static String walletPath = "monero_ecwid_wallet";
-    private static MoneroNetworkType networkType = MoneroNetworkType.TESTNET;
     private static final Long restoreHeight = 2644330l;
 
-    private static MoneroWalletConfig getWalletConfig() {
-        MoneroWalletConfig config = new MoneroWalletConfig()
-        .setPath(walletPath)
-        .setPassword("supersecretpassword123")
-        .setNetworkType(networkType)
-        .setServerUri("http://node2.monerodevs.org:28089");
+    private static ServerConfig getServerConfig() {
+        try {
+            return ServerConfigFileReader.read();
+        }
+        catch (Exception e) {
+            return new ServerConfig();
+        }
+    }
 
+    private static MoneroWalletConfig getWalletConfig() {
+        ServerConfig serverConfig = getServerConfig();
+        String address = serverConfig.walletAddress;
+        String viewKey = serverConfig.walletViewKey;
+        String walletPassword = serverConfig.walletPassword.isEmpty() ? "supersecretpassword123" : serverConfig.walletAddress;
+        boolean validConfig = !address.isEmpty() && !viewKey.isEmpty() && !walletPassword.isEmpty();
+        MoneroNetworkType networkType = serverConfig.getNetType();
+        String serverUri;
+
+        if (serverConfig.walletServerUri.isEmpty()) {
+            serverUri = networkType == MoneroNetworkType.TESTNET ? TESTNET_NODE : networkType == MoneroNetworkType.STAGENET ? STAGENET_NODE : MAINNET_NODE;
+        }
+        else {
+            serverUri = serverConfig.walletServerUri;
+        }
+
+        MoneroWalletConfig config = new MoneroWalletConfig()
+            .setPath(walletPath)
+            .setPassword(walletPassword)
+            .setNetworkType(networkType)
+            .setServerUri(serverUri);
+        
         if (!MoneroWalletFull.walletExists(walletPath)) {
-            config.setSeed("archer frying slid pruned smuggled elapse touchy assorted cogs sabotage orders directed together aching bikini eels bubble else rigid toenail tweezers alpine energy entrance alpine");
-            config.setRestoreHeight(restoreHeight);
+            if (validConfig) {
+                config.setPrimaryAddress(address);
+                config.setPrivateViewKey(viewKey);
+            }
+            else {
+                config.setSeed("archer frying slid pruned smuggled elapse touchy assorted cogs sabotage orders directed together aching bikini eels bubble else rigid toenail tweezers alpine energy entrance alpine");
+                config.setRestoreHeight(restoreHeight);
+            }
         }
 
         return config;

@@ -11,7 +11,6 @@ import monero.ecwid.server.repository.MoneroTransactionEntity;
 import monero.ecwid.server.repository.MoneroTransactionRepository;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.repository.PaymentRequestRepository;
-import monero.ecwid.server.repository.WalletConfigRepository;
 import monero.ecwid.server.utils.WalletListener;
 import monero.ecwid.server.utils.WalletUtils;
 import monero.wallet.MoneroWalletFull;
@@ -24,20 +23,17 @@ public class PaymentRequestService {
     public final PaymentRequestRepository repository;
     @Autowired
     public final MoneroTransactionRepository transactionRepository;
-    @Autowired
-    public final WalletConfigRepository configRepository;
 
     public final MoneroWalletFull wallet;
 
     private MoneroWalletListener walletListener;
 
-    public PaymentRequestService(PaymentRequestRepository repository, MoneroTransactionRepository transactionRepository, WalletConfigRepository configRepository) {
+    public PaymentRequestService(PaymentRequestRepository repository, MoneroTransactionRepository transactionRepository) {
         this.repository = repository;
         this.wallet = WalletUtils.getWallet();
         this.walletListener = new WalletListener(this);
         this.wallet.addListener(walletListener);
         this.transactionRepository = transactionRepository;
-        this.configRepository = configRepository;
     }
 
     public List<PaymentRequestEntity> getAll() {

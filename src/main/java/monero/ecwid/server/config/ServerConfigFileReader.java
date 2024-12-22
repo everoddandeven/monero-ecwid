@@ -29,6 +29,11 @@ public abstract class ServerConfigFileReader {
         String dbUsername = rawConfig.getOrDefault("db-username", "monero_ecwid");
         String dbPassword = rawConfig.getOrDefault("db-password", "");
         String reqConfirmations = rawConfig.getOrDefault("required-confirmations", "10");
+        String walletAddress = rawConfig.getOrDefault("wallet-address", "");
+        String walletViewKey = rawConfig.getOrDefault("wallet-view-key", "");
+        String walletServerUri = rawConfig.getOrDefault("wallet-server-uri", "");
+        String walletPassword = rawConfig.getOrDefault("wallet-password", "");
+        String walletNetType = rawConfig.getOrDefault("wallet-net-type", "");
 
         Integer port = Integer.valueOf(dbPort);
         Long confirmations = Long.valueOf(reqConfirmations);
@@ -38,6 +43,12 @@ public abstract class ServerConfigFileReader {
         config.dbUsername = dbUsername;
         config.dbPassword = dbPassword;
         config.requiredConfirmations = confirmations;
+        config.walletAddress = walletAddress;
+        config.walletViewKey = walletViewKey;
+        config.walletPassword = walletPassword;
+        config.walletNetType = walletNetType;
+
+        config.walletServerUri = walletServerUri;
 
         return config;
     }

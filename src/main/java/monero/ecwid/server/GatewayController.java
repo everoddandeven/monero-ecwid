@@ -19,6 +19,7 @@ import monero.ecwid.model.EcwidPaymentData;
 import monero.ecwid.model.EcwidPaymentDataDecoder;
 import monero.ecwid.server.config.ServerConfig;
 import monero.ecwid.server.config.ServerConfigFileReader;
+import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
 import monero.ecwid.server.utils.XmrConverter;
@@ -85,6 +86,21 @@ public class GatewayController {
             request = paymentRequestService.newPaymentRequest(txId, storeId, token, usdTotal, convertUsdToXmr(usdTotal), returnUrl);
         }
         catch (Exception e) {
+            if (e instanceof PaymentRequestAlreadyExistsException) {
+                Optional<PaymentRequestEntity> req = paymentRequestService.repository.findById(txId);
+
+                if (!req.isEmpty()) {
+                    
+                    request = req.get();
+
+                    logger.info("already existing request status: " + request.getStatus() + ", created at: " + request.getCreatedAt().toString());
+
+                    processModel(request, model);
+
+                    return "payment.html";
+                }
+            }
+
             logger.error(txId, e);
             model.addAttribute("error", e.getMessage());
 
