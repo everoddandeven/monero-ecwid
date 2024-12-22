@@ -28,13 +28,16 @@ public abstract class ServerConfigFileReader {
         String dbPort = rawConfig.getOrDefault("db-port", "3306");
         String dbUsername = rawConfig.getOrDefault("db-username", "monero_ecwid");
         String dbPassword = rawConfig.getOrDefault("db-password", "");
+        String reqConfirmations = rawConfig.getOrDefault("required-confirmations", "10");
 
         Integer port = Integer.valueOf(dbPort);
+        Long confirmations = Long.valueOf(reqConfirmations);
 
         config.dbHost = dbHost;
         config.dbPort = port;
         config.dbUsername = dbUsername;
         config.dbPassword = dbPassword;
+        config.requiredConfirmations = confirmations;
 
         return config;
     }

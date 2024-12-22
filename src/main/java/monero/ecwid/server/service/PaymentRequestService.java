@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
+import monero.ecwid.server.repository.MoneroTransactionEntity;
 import monero.ecwid.server.repository.MoneroTransactionRepository;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.repository.PaymentRequestRepository;
@@ -63,5 +64,28 @@ public class PaymentRequestService {
         request.setStoreToken(storeToken);
 
         return this.repository.save(request);
+    }
+
+    public Long getTxConfirmations(String txId) {
+        List<MoneroTransactionEntity> txs = transactionRepository.findAll();
+        MoneroTransactionEntity transaction = null;
+
+        for (MoneroTransactionEntity tx : txs) {
+            if (!tx.getTxId().equals(txId)) {
+                continue;
+            }
+            if (transaction == null) {
+                transaction = tx;
+            }
+            else if (transaction.getHeight().compareTo(tx.getHeight()) < 0) {
+                transaction = tx;
+            }
+        }
+
+        if (transaction == null) {            
+            return Long.valueOf(0);
+        }
+
+        return WalletUtils.getTxConfirmations(transaction.getTxHash());
     }
 }

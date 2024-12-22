@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import monero.ecwid.model.EcwidPaymentData;
 import monero.ecwid.model.EcwidPaymentDataDecoder;
+import monero.ecwid.server.config.ServerConfig;
+import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
 import monero.ecwid.server.utils.XmrConverter;
@@ -37,6 +39,34 @@ public class GatewayController {
 
     public static BigInteger convertUsdToXmr(Float usdTotal) throws Exception {
         return XmrConverter.convertUsdToPiconero(usdTotal);
+    }
+
+    private static ServerConfig getServerConfig() {
+        try {
+            return ServerConfigFileReader.read();
+        }
+        catch (Exception e) {
+            return new ServerConfig();
+        }
+    }
+
+    private static Long getRequiredConfirmations() {
+        return getServerConfig().requiredConfirmations;
+    }
+
+    private void processModel(PaymentRequestEntity request, Model model) {
+        BigDecimal xmrAmount = BigDecimal.valueOf(request.getAmountToPay().longValue()).divide(BigDecimal.valueOf(1000000000000l));
+        String returnUrl = request.getReturnUrl();
+        String txId = request.getTxId();
+
+        model.addAttribute("title", "Monero Payment | Order " + txId);
+        model.addAttribute("returnUrl", returnUrl);
+        model.addAttribute("address", request.getAddress());
+        model.addAttribute("amountXmr", xmrAmount + " XMR");
+        model.addAttribute("txId", txId);
+        model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
+        model.addAttribute("status", request.getStatus());
+        model.addAttribute("createdAt", request.getCreatedAt().toString());    
     }
 
     private String processPaymentRequest(EcwidPaymentData paymentData, Model model) {
@@ -61,14 +91,9 @@ public class GatewayController {
             return "error.html";
         }
 
-        BigDecimal xmrAmount = BigDecimal.valueOf(request.getAmountToPay().longValue()).divide(BigDecimal.valueOf(1000000000000l));
-        model.addAttribute("title", "Monero Payment | Order " + txId);
-        model.addAttribute("returnUrl", returnUrl);
-        model.addAttribute("address", request.getAddress());
-        model.addAttribute("amountXmr", xmrAmount + " XMR");
-        model.addAttribute("txId", txId);
-        model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
-        model.addAttribute("status", request.getStatus());
+        logger.info("request status: " + request.getStatus() + ", created at: " + request.getCreatedAt().toString());
+
+        processModel(request, model);
 
         return "payment.html";
     }
@@ -117,17 +142,7 @@ public class GatewayController {
             return "error.html";
         }
 
-        String returnUrl = request.getReturnUrl();
-
-        BigDecimal xmrAmount = BigDecimal.valueOf(request.getAmountToPay().longValue()).divide(BigDecimal.valueOf(1000000000000l));
-
-        model.addAttribute("returnUrl", returnUrl);
-        model.addAttribute("title", "Monero Payment | Order " + id);
-        model.addAttribute("txId", id);
-        model.addAttribute("address", request.getAddress());
-        model.addAttribute("amountXmr", xmrAmount + " XMR");
-        model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
-        model.addAttribute("status", request.getStatus());
+        processModel(request, model);
 
         return "payment.html"; // Nome del file HTML nella cartella `src/main/resources/templates`
     }
@@ -141,6 +156,8 @@ public class GatewayController {
             PaymentRequestEntity paymentReq = req.get();
 
             paymentReq.setBlockchainHeight(paymentRequestService.wallet.getDaemonHeight());
+            paymentReq.setConfirmations(paymentRequestService.getTxConfirmations(id));
+            paymentReq.setRequiredConfirmations(getRequiredConfirmations());
 
             return paymentReq;
         }

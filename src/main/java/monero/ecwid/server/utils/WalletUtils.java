@@ -97,4 +97,13 @@ public abstract class WalletUtils {
         return subaddress;
     }
 
+    public static Long getTxConfirmations(String txHash) {
+        Long confirmations = getWallet().getTx(txHash).getNumConfirmations();
+
+        if (confirmations == null) {
+            return Long.valueOf(0l);
+        }
+
+        return confirmations;
+    }
 }

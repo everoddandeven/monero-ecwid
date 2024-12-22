@@ -45,14 +45,14 @@
                     <div class="spinner-grow spinner-grow-sm" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    Waiting for confirmation...
+                    (<span id="confirmations">0/0</span>) Waiting for confirmation...
                 </div>
                 <div id="unpaidBody">
                     <div id="waitingForPayment" class="alert alert-dark text-center" role="alert">
                         <div class="spinner-grow spinner-grow-sm" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        Waiting for payment (time remaining <span id="timer">00:00</span>)...
+                        (<span id="timer">00:00</span>) Waiting for payment...
                     </div>
 
                     <div id="partiallyPaid" class="alert alert-dark text-center" role="alert" hidden>
@@ -64,7 +64,7 @@
 
                     <h4 class="card-title"><i class="bi bi-wallet2"></i>&nbsp;Payment Instructions</h4>
                     <div class="alert alert-dark text-center" role="alert">
-                        Deposit exactly <span id="amountToPay" class="badge text-bg-primary" th:text="${amountXmr}">amount</span> to the following address:
+                        Deposit <span id="amountToPay" class="badge text-bg-primary" th:text="${amountXmr}">amount</span> to the following address:
                         <br>
                         <br>
                         <div class="text-center mb-4">
@@ -80,6 +80,7 @@
 
         <!-- Hidden Data (if needed) -->
         <div hidden>
+            <span id="createdAt" th:text="${createdAt}" hidden></span>
             <span id="returnUrl" th:text="${returnUrl}" hidden></span>
             <span id="status" tx:text="${status}" hidden></span>
         </div>
@@ -101,8 +102,8 @@
             if (error) console.error(error);
         });
     });
-    var refreshInterval = null;
-    var refreshing = false;
+    let refreshInterval = null;
+    let refreshing = false;
 
     function hideElement(id) {
         const elem = document.getElementById(id);
@@ -160,6 +161,11 @@
         element.textContent = content;
     }
 
+    function setConfirmations(confirmations, confirmationsRequired) {
+        const content = `${confirmations}/${confirmationsRequired}`;
+        setElementText('confirmations', content);
+    }
+
     function getPaymentId() {
         return getElementText("paymentId");
     }
@@ -202,6 +208,8 @@
         let err = null;
         
         try {
+            let confirmations = 0;
+            let confirmationsRequired = 0;
             const payment = await getPayment();
             const partiallyPaid = payment.status === 'UNPAID' && payment.amountDeposited != 0 && payment.amountDeposited < payment.amountXmr;
             const amountToDeposit = payment.amountDeposited === 0 ? payment.amountXmr : payment.amountXmr > payment.amountDeposited ? payment.amountXmr - payment.amountDeposited : 0;
@@ -211,25 +219,33 @@
             if (partiallyPaid) {
                 payment.status = 'PARTIALLY_PAID';
             }
+            if (payment.status === 'PAID') {
+                confirmationsRequired = payment.requiredConfirmations ? payment.requiredConfirmations : 0;
+                confirmations = payment.confirmations ? payment.confirmations : 0;
+
+                if (confirmations < confirmationsRequired) {
+                    payment.status = 'WAITING';
+                }
+            }
 
             console.log(payment);
 
             if (payment.status === 'PAID') {
-                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
+                setTimeout(() => window.location.replace(getReturnUrl()), 6000);
                 hideElement('unpaidBody');
                 showElement('paidBody');
                 clearInterval(refreshInterval);
                 return;
             }
             else if (payment.status === 'EXPIRED') {
-                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
+                setTimeout(() => window.location.replace(getReturnUrl()), 6000);
                 hideElement('unpaidBody');
                 showElement('expiredBody');
                 clearInterval(refreshInterval);
                 return;
             }
             else if (payment.status === 'CANCELLED') {
-                setTimeout(() => window.location.replace(getReturnUrl()), 3000);
+                setTimeout(() => window.location.replace(getReturnUrl()), 6000);
                 hideElement('unpaidBody');
                 showElement('cancelledBody');
                 clearInterval(refreshInterval);
@@ -237,8 +253,8 @@
             }
             else if (payment.status === 'WAITING') {
                 hideElement('unpaidBody');
+                setConfirmations(confirmations, confirmationsRequired);
                 showElement('waitingBody');
-                clearInterval(refreshInterval);
                 return;
             }
             else if (payment.status === 'PARTIALLY_PAID') {
@@ -258,7 +274,28 @@
         }
     }
 
-    let timeRemaining = 60 * 15;
+    function getSecondsRemaining(date, timeoutMinutes = 15) {
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+            throw new Error("Invalid parameter");
+        }
+
+        const targetTime = date.getTime() + timeoutMinutes * 60 * 1000;
+
+        const now = Date.now();
+
+        const remainingMilliseconds = targetTime - now;
+        const remainingSeconds = Math.max(0, Math.floor(remainingMilliseconds / 1000));
+
+        return remainingSeconds;
+    }
+
+    function getCreatedAt() {
+        const createdAt = new Date(getElementText('createdAt'));
+        
+        return createdAt;
+    }
+
+    let timeRemaining = getSecondsRemaining(getCreatedAt());
 
     // Aggiorna il timer
     function updateTimer() {

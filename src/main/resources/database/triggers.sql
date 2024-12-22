@@ -34,8 +34,7 @@ CREATE TRIGGER `before_insert_payment_request`
 BEFORE INSERT ON `payment_requests`
 FOR EACH ROW
 BEGIN
-	SET NEW.`created_at` = CURRENT_TIMESTAMP;
-    SET NEW.`updated_at` = CURRENT_TIMESTAMP;
+	SET NEW.`created_at` = CURRENT_TIMESTAMP, NEW.`updated_at` = CURRENT_TIMESTAMP;
 END $$
 
 DELIMITER ;

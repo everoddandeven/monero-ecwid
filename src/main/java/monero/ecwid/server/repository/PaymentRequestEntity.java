@@ -42,18 +42,20 @@ public class PaymentRequestEntity {
     @Column(name = "return_url", nullable = false)
     private String returnUrl;
 
-    @Column(name = "created_at", nullable = true)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    private Date createdAt = new Date();
 
-    @Column(name = "updated_at", nullable = true)
+    @Column(name = "updated_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    private Date updatedAt = new Date();
 
     @Column(name = "ecwid_api_updated", nullable = false)
     private boolean ecwidApiUpdated = false;
 
     private Long blokchainHeight = 0l;
+    private Long confirmations = 0l;
+    private Long requiredConfirmations = 0l;
 
     public String getTxId() {
         return txId;
@@ -217,6 +219,22 @@ public class PaymentRequestEntity {
 
     public void setBlockchainHeight(Long value) {
         blokchainHeight = value;
+    }
+
+    public Long getConfirmations() {
+        return confirmations;
+    }
+
+    public void setConfirmations(Long value) {
+        confirmations = value;
+    }
+
+    public Long getRequiredConfirmations() {
+        return requiredConfirmations;
+    }
+
+    public void setRequiredConfirmations(Long value) {
+        requiredConfirmations = value;
     }
 
 }

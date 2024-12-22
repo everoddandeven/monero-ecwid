@@ -8,10 +8,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import monero.ecwid.model.EcwidStoreService;
-import monero.ecwid.server.repository.MoneroTransactionEntity;
+import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
-import monero.ecwid.server.utils.WalletUtils;
 
 @Component
 public class EcwidUpdateOrderTask implements ServerTask {
@@ -22,23 +21,13 @@ public class EcwidUpdateOrderTask implements ServerTask {
         paymentRequestService = service;
     }
 
-    private Long getRequiredConfirmations() {
+    private static Long getRequiredConfirmations() {
         try {
-            return Long.valueOf(10l);
+            return ServerConfigFileReader.read().requiredConfirmations;
         }
         catch (Exception e) {
             return Long.valueOf(10l);
         }
-    }
-
-    private Long getTxConfirmations(String txHash) {
-        Long confirmations = WalletUtils.getWallet().getTx(txHash).getNumConfirmations();
-
-        if (confirmations == null) {
-            return Long.valueOf(0l);
-        }
-
-        return confirmations;
     }
 
     private EcwidStoreService getStore(PaymentRequestEntity paymentRequest) {
@@ -48,32 +37,8 @@ public class EcwidUpdateOrderTask implements ServerTask {
     private boolean waitingForConfirmation(PaymentRequestEntity paymentRequest) {
         String txId = paymentRequest.getTxId();
 
-        List<MoneroTransactionEntity> txs = paymentRequestService.transactionRepository.findAll();
-        MoneroTransactionEntity transaction = null;
-
-        for (MoneroTransactionEntity tx : txs) {
-            if (!tx.getTxId().equals(txId)) {
-                continue;
-            }
-            if (transaction == null) {
-                transaction = tx;
-            }
-            else if (transaction.getHeight().compareTo(tx.getHeight()) < 0) {
-                transaction = tx;
-            }
-        }
-
-        if (transaction == null) {            
-            if (paymentRequest.getStatus().equals("PAID")) {
-                logger.info("waitingForConfirmation(): No monero_transactions records for paid payment request " + paymentRequest.getTxId());
-                return true;
-            }
-
-            return false;
-        }
-
         Long requiredConfirmations = getRequiredConfirmations();
-        Long txConfirmations = getTxConfirmations(transaction.getTxHash());
+        Long txConfirmations = paymentRequestService.getTxConfirmations(txId);
 
         return txConfirmations.compareTo(requiredConfirmations) < 0;
     }
