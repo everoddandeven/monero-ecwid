@@ -16,9 +16,15 @@
             <h1 class="display-5"><img width="50" height="50" src="https://cryptologos.cc/logos/monero-xmr-logo.png"> <strong>Monero Payment</strong></h1>
             <p class="lead">Secure and private transactions</p>
         </div>
+        
+        <div id="loadBar" class="text-center">
+            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only"></span>
+            </div>
+        </div>
 
         <!-- Payment Information Card -->
-        <div class="card shadow-sm bg-secondary text-light">
+        <div id="paymentInformation" class="card shadow-sm bg-secondary text-light" hidden>
 
             <div class="card-body">
                 <h4 class="card-title"><i class="bi bi-receipt"></i>&nbsp;Order ID</h4>
@@ -80,9 +86,9 @@
 
         <!-- Hidden Data (if needed) -->
         <div hidden>
-            <span id="createdAt" th:text="${createdAt}" hidden></span>
-            <span id="returnUrl" th:text="${returnUrl}" hidden></span>
-            <span id="status" tx:text="${status}" hidden></span>
+            <span id="createdAt" th:text="${createdAt}" hidden>createdAt</span>
+            <span id="returnUrl" th:text="${returnUrl}" hidden>returnUrl</span>
+            <span id="status" tx:text="${paymentStatus}" hidden>status</span>
         </div>
     </div>
 
@@ -296,6 +302,21 @@
     }
 
     let timeRemaining = getSecondsRemaining(getCreatedAt());
+    
+    function hideLoadBar() {
+        const loadBar = document.getElementById('loadBar');
+
+        if (!loadBar) {
+            console.warn("Load bar not found");
+        }
+        else {
+            loadBar.remove();
+        }
+
+        showElement('paymentInformation');
+    }
+
+    let loading = true;
 
     // Aggiorna il timer
     function updateTimer() {
@@ -316,16 +337,21 @@
 
     setTimeout(() => {
         refreshInterval = setInterval(async () => {
-        try {
-            await refresh();
-        }
-        catch(error) {
-            console.error(error);
-            clearInterval(refreshInterval);
-            refreshInterval = null;
-        }
-    }, 5000);
-    }, 5000);
+            try {
+                await refresh();
+
+                if (loading) {
+                    hideLoadBar();
+                    loading = false;
+                }
+            }
+            catch(error) {
+                console.error(error);
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }, 5000);
+    }, 0);
 
 </script>
 </html>

@@ -68,7 +68,7 @@ public class GatewayController {
         model.addAttribute("amountDeposited", BigDecimal.valueOf(request.getAmountDeposited().longValue()).divide(piconeroDivider).toString() + " XMR");
         model.addAttribute("txId", txId);
         model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
-        model.addAttribute("status", request.getStatus());
+        model.addAttribute("paymentStatus", request.getStatus());
         model.addAttribute("createdAt", request.getCreatedAt().toString());    
     }
 
