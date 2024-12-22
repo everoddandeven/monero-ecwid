@@ -56,7 +56,8 @@ public class GatewayController {
     }
 
     private void processModel(PaymentRequestEntity request, Model model) {
-        BigDecimal xmrAmount = BigDecimal.valueOf(request.getAmountToPay().longValue()).divide(BigDecimal.valueOf(1000000000000l));
+        BigDecimal piconeroDivider = BigDecimal.valueOf(1000000000000l);
+        BigDecimal xmrAmount = BigDecimal.valueOf(request.getAmountToPay().longValue()).divide(piconeroDivider);
         String returnUrl = request.getReturnUrl();
         String txId = request.getTxId();
 
@@ -64,6 +65,7 @@ public class GatewayController {
         model.addAttribute("returnUrl", returnUrl);
         model.addAttribute("address", request.getAddress());
         model.addAttribute("amountXmr", xmrAmount + " XMR");
+        model.addAttribute("amountDeposited", BigDecimal.valueOf(request.getAmountDeposited().longValue()).divide(piconeroDivider).toString());
         model.addAttribute("txId", txId);
         model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
         model.addAttribute("status", request.getStatus());
