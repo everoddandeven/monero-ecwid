@@ -43,10 +43,10 @@ public class EcwidUpdateOrderTask implements ServerTask {
         return txConfirmations.compareTo(requiredConfirmations) < 0;
     }
 
-    private void updatePaymentRequest(PaymentRequestEntity paymentRequest) {
+    private boolean updatePaymentRequest(PaymentRequestEntity paymentRequest) {
         try {
             if (paymentRequest.getEcwidApiUpdated()) {
-                return;
+                return false;
             }
     
             String txId = paymentRequest.getTxId();
@@ -76,19 +76,29 @@ public class EcwidUpdateOrderTask implements ServerTask {
                 paymentRequest.setEcwidApiUpdated(true);
                 paymentRequestService.repository.save(paymentRequest);
                 logger.info("Successfully update ecwid payment request " + txId + " status: " + status);
+                
+                return true;
             }
         }
         catch (Exception e) {
             logger.error("Could not update payment request", e);
         }
 
+        return false;
     }
 
     private void updatePaymentRequests() {
         List<PaymentRequestEntity> requests = paymentRequestService.repository.findAll();
+        boolean updated = false;
 
         for (PaymentRequestEntity paymentRequest : requests) {
-            updatePaymentRequest(paymentRequest);
+            if (updatePaymentRequest(paymentRequest)) {
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            logger.info("Successfully executed update ecwid orders task");
         }
     }
 
@@ -97,7 +107,6 @@ public class EcwidUpdateOrderTask implements ServerTask {
     public void execute() {
         try {
             updatePaymentRequests();            
-            logger.info("Successfully executed update ecwid orders task");
         }
         catch (Exception e) {
             logger.error("An error occurred while updating ecwid orders", e);

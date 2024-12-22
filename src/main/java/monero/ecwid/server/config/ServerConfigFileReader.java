@@ -2,7 +2,10 @@ package monero.ecwid.server.config;
 
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,6 +57,8 @@ public abstract class ServerConfigFileReader {
     }
 
     private static Map<String, String> parseConfigFile(String configFilePath) throws IOException {
+        ensureConfigFileExists(configFilePath);
+        
         Map<String, String> configMap = new HashMap<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(configFilePath))) {
@@ -70,6 +75,27 @@ public abstract class ServerConfigFileReader {
         }
 
         return configMap;
+    }
+
+    private static void ensureConfigFileExists(String configFilePath) throws IOException {
+        File configFile = new File(configFilePath);
+
+        if (!configFile.exists()) {
+            System.out.println("File di configurazione non trovato, creazione di un nuovo file con valori di default...");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(configFile))) {
+                writer.write("# Configurazione default per Monero ECWID Server\n");
+                writer.write("db-host=localhost\n");
+                writer.write("db-port=3306\n");
+                writer.write("db-username=monero_ecwid\n");
+                writer.write("db-password=\n");
+                writer.write("required-confirmations=10\n");
+                writer.write("wallet-address=\n");
+                writer.write("wallet-view-key=\n");
+                writer.write("wallet-server-uri=\n");
+                writer.write("wallet-password=\n");
+                writer.write("wallet-net-type=\n");
+            }
+        }
     }
 
 }
