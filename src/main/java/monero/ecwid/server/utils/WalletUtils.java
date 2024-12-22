@@ -1,4 +1,4 @@
-package monero.ecwid.server.core;
+package monero.ecwid.server.utils;
 
 import java.math.BigInteger;
 

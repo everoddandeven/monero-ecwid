@@ -6,13 +6,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import monero.ecwid.server.core.WalletUtils;
 import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
 import monero.ecwid.server.repository.MoneroTransactionRepository;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.repository.PaymentRequestRepository;
 import monero.ecwid.server.repository.WalletConfigRepository;
-import monero.ecwid.server.core.WalletListener;
+import monero.ecwid.server.utils.WalletListener;
+import monero.ecwid.server.utils.WalletUtils;
 import monero.wallet.MoneroWalletFull;
 import monero.wallet.model.MoneroSubaddress;
 import monero.wallet.model.MoneroWalletListener;

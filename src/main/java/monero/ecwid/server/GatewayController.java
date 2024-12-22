@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import monero.ecwid.model.EcwidPaymentData;
 import monero.ecwid.model.EcwidPaymentDataDecoder;
-import monero.ecwid.server.core.XmrConverter;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
+import monero.ecwid.server.utils.XmrConverter;
 
 import org.springframework.ui.Model;
 
