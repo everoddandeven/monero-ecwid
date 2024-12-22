@@ -17,15 +17,23 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
-    strategy:
-      matrix:
-        node-version: [20]
-
+        
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up MySQL container
+      run: |
+        docker run --name mysql-server \
+          -e MYSQL_ROOT_PASSWORD=rootpassword \
+          -e MYSQL_DATABASE=monero_ecwid \
+          -e MYSQL_USER=monero_ecwid \
+          -e MYSQL_PASSWORD=devpassword \
+          -p 3306:3306 \
+          -d mysql:8.0
+        sleep 30
 
     - name: Install linux dependencies
       run: |
