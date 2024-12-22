@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, String> {
-    PaymentRequest findByAddress(String address);
+public interface PaymentRequestRepository extends JpaRepository<PaymentRequestEntity, String> {
+    PaymentRequestEntity findByAddress(String address);
 }
 

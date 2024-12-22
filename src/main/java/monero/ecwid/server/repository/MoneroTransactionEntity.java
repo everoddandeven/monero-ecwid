@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "monero_transactions")
-public class MoneroTransaction {
+public class MoneroTransactionEntity {
     
     @Id()
     @Column(name = "tx_hash", nullable = false)

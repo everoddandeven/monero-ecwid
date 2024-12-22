@@ -1,4 +1,4 @@
-package monero.ecwid.server.repository;
+package monero.ecwid.server.error;
 
 public class PaymentRequestAlreadyExistsException extends Exception {
     

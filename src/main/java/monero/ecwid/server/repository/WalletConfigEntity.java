@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "wallet_config")
-public class WalletConfig {
+public class WalletConfigEntity {
     
     @Id()
     @Column(name = "id", nullable = false)

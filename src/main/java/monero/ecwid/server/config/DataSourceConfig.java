@@ -1,4 +1,4 @@
-package monero.ecwid.server;
+package monero.ecwid.server.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

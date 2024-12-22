@@ -1,4 +1,4 @@
-package monero.ecwid.server;
+package monero.ecwid.server.config;
 
 public class ServerConfig {
     

@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "payment_requests")
-public class PaymentRequest {
+public class PaymentRequestEntity {
     @Id()
     @Column(name = "tx_id", nullable = false)
     private String txId;

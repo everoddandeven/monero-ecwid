@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import monero.ecwid.model.EcwidPaymentData;
 import monero.ecwid.model.EcwidPaymentDataDecoder;
 import monero.ecwid.server.core.XmrConverter;
-import monero.ecwid.server.repository.PaymentRequest;
-import monero.ecwid.server.repository.PaymentRequestService;
+import monero.ecwid.server.repository.PaymentRequestEntity;
+import monero.ecwid.server.service.PaymentRequestService;
 
 import org.springframework.ui.Model;
 
@@ -49,7 +49,7 @@ public class GatewayController {
 
         logger.info("New payment request: order id: " + orderId + ", tx id: " + txId + ", usd total: " + usdTotal);
 
-        PaymentRequest request;
+        PaymentRequestEntity request;
 
         try {
             request = paymentRequestService.newPaymentRequest(txId, storeId, token, usdTotal, convertUsdToXmr(usdTotal), returnUrl);
@@ -99,10 +99,10 @@ public class GatewayController {
 
     @GetMapping(path = "/v1/monero/ecwid/payment")
     public String getPaymentPage(@RequestParam(required = true) String id, Model model) {
-        PaymentRequest request;
+        PaymentRequestEntity request;
 
         try {
-            Optional<PaymentRequest> result = paymentRequestService.repository.findById(id);
+            Optional<PaymentRequestEntity> result = paymentRequestService.repository.findById(id);
 
             if (result.isEmpty()) {
                 throw new Exception("Order " + id + " not found");
@@ -134,11 +134,11 @@ public class GatewayController {
 
     @PostMapping(path = "/v1/monero/ecwid/getPayment")
     @ResponseBody
-    public PaymentRequest getPayment(@RequestParam(required = true) String id) throws Exception {
-        Optional<PaymentRequest> req = paymentRequestService.repository.findById(id);
+    public PaymentRequestEntity getPayment(@RequestParam(required = true) String id) throws Exception {
+        Optional<PaymentRequestEntity> req = paymentRequestService.repository.findById(id);
 
         if (req.isPresent()) {
-            PaymentRequest paymentReq = req.get();
+            PaymentRequestEntity paymentReq = req.get();
 
             paymentReq.setBlockchainHeight(paymentRequestService.wallet.getDaemonHeight());
 
