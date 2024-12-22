@@ -37,6 +37,7 @@ public abstract class ServerConfigFileReader {
         String walletServerUri = rawConfig.getOrDefault("wallet-server-uri", "");
         String walletPassword = rawConfig.getOrDefault("wallet-password", "");
         String walletNetType = rawConfig.getOrDefault("wallet-net-type", "");
+        String clientSecret = rawConfig.getOrDefault("client-secret", "");
 
         Integer port = Integer.valueOf(dbPort);
         Long confirmations = Long.valueOf(reqConfirmations);
@@ -50,6 +51,7 @@ public abstract class ServerConfigFileReader {
         config.walletViewKey = walletViewKey;
         config.walletPassword = walletPassword;
         config.walletNetType = walletNetType;
+        config.clientSecret = clientSecret;
 
         config.walletServerUri = walletServerUri;
 
@@ -94,6 +96,7 @@ public abstract class ServerConfigFileReader {
                 writer.write("wallet-server-uri=\n");
                 writer.write("wallet-password=\n");
                 writer.write("wallet-net-type=\n");
+                writer.write("client-secret=\n");
             }
         }
     }

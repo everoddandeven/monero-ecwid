@@ -14,6 +14,7 @@ public class ServerConfig {
     public String walletPassword = "";
     public String walletNetType = "testnet";
     public String walletServerUri = "";
+    public String clientSecret = "";
 
     public MoneroNetworkType getNetType() {
         if (walletNetType.toLowerCase().equals("mainnet")) {

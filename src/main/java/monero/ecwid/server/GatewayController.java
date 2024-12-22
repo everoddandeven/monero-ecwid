@@ -51,6 +51,10 @@ public class GatewayController {
         }
     }
 
+    private static String getClientSecret() {
+        return getServerConfig().clientSecret;
+    }
+
     private static Long getRequiredConfirmations() {
         return getServerConfig().requiredConfirmations;
     }
@@ -121,7 +125,7 @@ public class GatewayController {
         EcwidPaymentData paymentData;
 
         try {
-            String clientSecret = "Pe087Q6jr0CgwI96R2ZTuUMWfUAHQjMq";
+            String clientSecret = getClientSecret();
 
             paymentData = EcwidPaymentDataDecoder.decode(data, clientSecret);
         }

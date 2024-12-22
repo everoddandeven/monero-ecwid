@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>monero.ecwid</groupId>
-	<artifactId>server</artifactId>
+	<artifactId>monero-ecwid</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>server</name>
+	<name>monero-ecwid</name>
 	<description>Monero ECWID Payment Gateway Integration</description>
 	<url/>
 	<licenses>
