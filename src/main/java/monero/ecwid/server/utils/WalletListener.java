@@ -6,12 +6,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import monero.ecwid.model.EcwidStoreService;
 import monero.ecwid.server.repository.MoneroTransactionEntity;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
 import monero.wallet.model.MoneroOutputWallet;
-import monero.wallet.model.MoneroSubaddress;
 import monero.wallet.model.MoneroWalletListener;
 
 public class WalletListener extends MoneroWalletListener {
@@ -23,12 +21,11 @@ public class WalletListener extends MoneroWalletListener {
         this.paymentRequestService = paymentRequestService;
     }
 
-    private void processOutputTx(MoneroOutputWallet output) {
+    private void processTransaction(MoneroOutputWallet output) {
         BigInteger amount = output.getAmount();
         Long height = output.getTx().getHeight();
         String txHash = output.getTx().getHash();
         Boolean isConfirmed = output.getTx().isConfirmed();
-        Boolean isLocked = output.getTx().isLocked();
         Long confirmations = output.getTx().getNumConfirmations();
 
         Optional<MoneroTransactionEntity> moneroTransaction = this.paymentRequestService.transactionRepository.findById(txHash);
@@ -39,32 +36,24 @@ public class WalletListener extends MoneroWalletListener {
             if (tx.getHeight().equals(0l) && isConfirmed) {
                 tx.setHeight(height);
                 this.paymentRequestService.transactionRepository.save(tx);
+                logger.info("Confirmed transaction: " + tx.getTxHash() + ", confirmations: " + confirmations);
+            }
+            else {
+                logger.info("Unconfirmed transaction: " + tx.getTxHash());
             }
 
-            logger.info("output already processed " + amount + ", tx hash: " + txHash + ", confirmed: " + isConfirmed + ", is locked: " + isLocked);
             return;
         }
 
-        logger.info("Received output " + amount + ", tx hash: " + txHash + ", confirmed: " + isConfirmed + ", is locked: " + isLocked + ", confirmations: " + confirmations);
+        String address = this.paymentRequestService.wallet.getSubaddress(output.getAccountIndex(), output.getSubaddressIndex()).getAddress();
+        
+        logger.info("" + amount.divide(BigInteger.valueOf(1000000000000l)) + " XMR received at address: " + address);
 
-        MoneroSubaddress address = this.paymentRequestService.wallet.getSubaddress(output.getAccountIndex(), output.getSubaddressIndex());
-
-        logger.info("Got address: " + address);
-
-        PaymentRequestEntity req = this.paymentRequestService.repository.findByAddress(address.getAddress());
+        PaymentRequestEntity req = this.paymentRequestService.repository.findByAddress(address);
 
         if (req == null) {
-            logger.info("No payment request found");
+            logger.info("No payment request found for address " + address);
             return;
-        }
-
-        logger.info("Payment request amount left to pay: " + req.getAmountToPay());
-
-        if (req.getStatus().equals("UNPAID") && req.getAmountToPay().compareTo(amount) <= 0) {
-            req.setStatus("PAID");
-        }
-        else {
-            logger.info("Partially paid");
         }
 
         MoneroTransactionEntity transaction = new MoneroTransactionEntity();
@@ -80,36 +69,23 @@ public class WalletListener extends MoneroWalletListener {
             transaction.setHeight(0l);
         }
         
-        // Send update status to ecwid before redirect
-
-        EcwidStoreService storeService = EcwidStoreService.getService(req.getStoreId(), req.getStoreToken());
-
         try {
-            if (req.getStatus() == "PAID") {
-                storeService.setOrderPaid(req.getTxId());
-                logger.info("Updated ECWID store");
-            }
-
             this.paymentRequestService.transactionRepository.save(transaction);
-            this.paymentRequestService.repository.save(req);
+            logger.info("Successfully recorded tx " + txHash);
         }
         catch (Exception e) {
-            logger.error("Could not update order status", e);
+            logger.error("Could not update order " + req.getTxId() + " status", e);
         }
 
     }
     
     @Override
     public void onOutputReceived(MoneroOutputWallet output) {
-        processOutputTx(output);
-    }
-
-    @Override
-    public void onNewBlock(long height) {
+        processTransaction(output);
     }
 
     @Override
     public void onSyncProgress(long height, long startHeight, long endHeight, double percentDone, String message) {
-        logger.info(message + " " + percentDone*100 + "%");
+        logger.info(message + " " + percentDone*100 + "% (" + height + "/" + endHeight + ")");
     }
 }

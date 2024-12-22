@@ -19,6 +19,10 @@ BEGIN
 	UPDATE `payment_requests`
     SET `amount_deposited` = `new_sum`
     WHERE `tx_id` = NEW.`tx_id`;
+    
+    UPDATE `payment_requests`
+    SET `status` = 'PAID', `ecwid_api_updated` = FALSE
+    WHERE `amount_deposited` > `amount_xmr` AND `status` = 'UNPAID';
 
 END $$
 
@@ -35,3 +39,4 @@ BEGIN
 END $$
 
 DELIMITER ;
+

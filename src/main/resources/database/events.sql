@@ -1,8 +1,10 @@
 USE `monero_ecwid`;
 
-CREATE EVENT IF NOT EXISTS `expire_status_event`
+DROP EVENT IF EXISTS `payment_request_expiration_event`;
+
+CREATE EVENT IF NOT EXISTS `payment_request_expiration_event`
 ON SCHEDULE EVERY 1 MINUTE
 DO
-  UPDATE `payment_requets`
-  SET `status` = 'EXPIRED'
-  WHERE `status` = 'UNPAID' AND `created_at` <= NOW() - INTERVAL 15 MINUTE;
+  UPDATE `payment_requests`
+  SET `status` = 'EXPIRED', `ecwid_api_updated` = FALSE
+  WHERE `status` = 'UNPAID' AND `amount_deposited` = 0 AND `created_at` <= NOW() - INTERVAL 15 MINUTE;

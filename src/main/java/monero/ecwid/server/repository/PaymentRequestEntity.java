@@ -50,6 +50,9 @@ public class PaymentRequestEntity {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
+    @Column(name = "ecwid_api_updated", nullable = false)
+    private boolean ecwidApiUpdated = false;
+
     private Long blokchainHeight = 0l;
 
     public String getTxId() {
@@ -146,6 +149,14 @@ public class PaymentRequestEntity {
 
     public Date getUpdatedAt() {
         return updatedAt;
+    }
+
+    public boolean getEcwidApiUpdated() {
+        return ecwidApiUpdated;
+    }
+
+    public void setEcwidApiUpdated(boolean value) {
+        ecwidApiUpdated = value;
     }
 
     public BigInteger getAmountToPay() {

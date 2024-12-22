@@ -50,7 +50,6 @@ public abstract class XmrConverter {
         return bid.add(ask).divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP);
     }
     
-
     private static BigDecimal getHtxExchangeRate() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
