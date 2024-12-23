@@ -42,9 +42,14 @@ public abstract class ServerConfigFileReader {
         String walletPassword = rawConfig.getOrDefault("wallet-password", "");
         String walletNetType = rawConfig.getOrDefault("wallet-net-type", "");
         String clientSecret = rawConfig.getOrDefault("client-secret", "");
+        String mailHost = rawConfig.getOrDefault("mail-host", "");
+        String mailPort = rawConfig.getOrDefault("mail-port", "");
+        String mailUsername = rawConfig.getOrDefault("mail-username", "");
+        String mailPassword = rawConfig.getOrDefault("mail-password", "");
 
         Integer port = Integer.valueOf(dbPort);
         Long confirmations = Long.valueOf(reqConfirmations);
+
 
         config.dbHost = dbHost;
         config.dbPort = port;
@@ -56,6 +61,11 @@ public abstract class ServerConfigFileReader {
         config.walletPassword = walletPassword;
         config.walletNetType = walletNetType;
         config.clientSecret = clientSecret;
+
+        config.mailHost = mailHost;
+        config.mailPort = Integer.valueOf(mailPort);
+        config.mailUsername = mailUsername;
+        config.mailPassword = mailPassword;
 
         config.walletServerUri = walletServerUri;
 
@@ -102,6 +112,10 @@ public abstract class ServerConfigFileReader {
                 writer.write("wallet-password=supersecretpassword123\n");
                 writer.write("wallet-net-type=testnet\n");
                 writer.write("client-secret=\n");
+                writer.write("mail-host=\n");
+                writer.write("mail-port=\n");
+                writer.write("mail-username=\n");
+                writer.write("mail-password=\n");
             }
         }
     }

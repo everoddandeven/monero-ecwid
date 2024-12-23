@@ -13,6 +13,7 @@ CREATE TABLE `payment_requests` (
     `amount_xmr` BIGINT NOT NULL,
     `amount_deposited` BIGINT NOT NULL DEFAULT 0,
     `return_url` TEXT NOT NULL,
+    `customer_mail` TEXT NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `status` ENUM ( 'PAID', 'UNPAID', 'CANCELLED', 'REFUNDED', 'EXPIRED' ) NOT NULL DEFAULT 'UNPAID',

@@ -10,15 +10,18 @@ import org.springframework.stereotype.Component;
 import monero.ecwid.model.EcwidStoreService;
 import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.ecwid.server.repository.PaymentRequestEntity;
+import monero.ecwid.server.service.MailService;
 import monero.ecwid.server.service.PaymentRequestService;
 
 @Component
 public class EcwidUpdateOrderTask implements ServerTask {
     private static final Logger logger = LoggerFactory.getLogger(EcwidUpdateOrderTask.class);
     private final PaymentRequestService paymentRequestService;
+    private final MailService mailService;
 
-    public EcwidUpdateOrderTask(PaymentRequestService service) {
+    public EcwidUpdateOrderTask(PaymentRequestService service, MailService mailService) {
         paymentRequestService = service;
+        this.mailService = mailService;
     }
 
     private static Long getRequiredConfirmations() {
@@ -61,6 +64,11 @@ public class EcwidUpdateOrderTask implements ServerTask {
             else if (status.equals("PAID")) {
                 if (!waitingForConfirmation(paymentRequest)) {
                     storeService.setOrderPaid(txId);
+
+                    if (mailService.isEnabled()) {
+                        mailService.sendReceipt(paymentRequest);
+                    }
+
                     updated = true;
                 }
                 else {

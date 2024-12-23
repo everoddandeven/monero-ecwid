@@ -21,7 +21,6 @@ import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
 import monero.ecwid.server.repository.PaymentRequestEntity;
 import monero.ecwid.server.service.PaymentRequestService;
-import monero.ecwid.server.utils.XmrConverter;
 
 import org.springframework.ui.Model;
 
@@ -68,36 +67,25 @@ public class GatewayController {
         model.addAttribute("txId", txId);
         model.addAttribute("amountUsd", request.getAmountUsd() + " USD");
         model.addAttribute("paymentStatus", request.getStatus());
-        model.addAttribute("createdAt", request.getCreatedAt().toString());    
+        model.addAttribute("createdAt", request.getCreatedAt().toString());
+        model.addAttribute("customerMail", request.getCustomerMail());
     }
 
     private String processPaymentRequest(EcwidPaymentData paymentData, Model model) {
-        String orderId = paymentData.cart.order.id;
         String txId = paymentData.cart.order.referenceTransactionId;
-        Float usdTotal = paymentData.cart.order.usdTotal;
-        String returnUrl = paymentData.returnUrl;
-        String token = paymentData.token;
-        Integer storeId = paymentData.storeId;
-
-        logger.info("New payment request: order id: " + orderId + ", tx id: " + txId + ", usd total: " + usdTotal);
-
-        PaymentRequestEntity request;
+        PaymentRequestEntity request = null;
 
         try {
-            request = paymentRequestService.newPaymentRequest(txId, storeId, token, usdTotal, XmrConverter.convertUsdToPiconero(usdTotal), returnUrl);
+            request = paymentRequestService.newPaymentRequest(paymentData);
         }
         catch (Exception e) {
             if (e instanceof PaymentRequestAlreadyExistsException) {
                 Optional<PaymentRequestEntity> req = paymentRequestService.repository.findById(txId);
 
                 if (!req.isEmpty()) {
-                    
                     request = req.get();
-
                     logger.info("already existing request status: " + request.getStatus() + ", created at: " + request.getCreatedAt().toString());
-
                     processModel(request, model);
-
                     return "payment.html";
                 }
             }

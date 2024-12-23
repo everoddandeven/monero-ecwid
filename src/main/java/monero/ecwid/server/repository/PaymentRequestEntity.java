@@ -53,6 +53,9 @@ public class PaymentRequestEntity {
     @Column(name = "ecwid_api_updated", nullable = false)
     private boolean ecwidApiUpdated = false;
 
+    @Column(name = "customer_mail", nullable = false)
+    private String customerMail = "";
+
     @Transient
     private Long blockchainHeight = 0l;
     @Transient
@@ -170,6 +173,14 @@ public class PaymentRequestEntity {
         }
 
         return amountXmr.subtract(amountDeposited);
+    }
+
+    public String getCustomerMail() {
+        return customerMail;
+    }
+
+    public void setCustomerMail(String mail) {
+        customerMail = mail;
     }
 
     public boolean isExpired() {
