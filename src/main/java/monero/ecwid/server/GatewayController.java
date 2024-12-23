@@ -1,7 +1,6 @@
 package monero.ecwid.server;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -36,10 +35,6 @@ public class GatewayController {
 
     public GatewayController(PaymentRequestService paymentRequestService) {
         this.paymentRequestService = paymentRequestService;
-    }
-
-    public static BigInteger convertUsdToXmr(Float usdTotal) throws Exception {
-        return XmrConverter.convertUsdToPiconero(usdTotal);
     }
 
     private static ServerConfig getServerConfig() {
@@ -89,7 +84,7 @@ public class GatewayController {
         PaymentRequestEntity request;
 
         try {
-            request = paymentRequestService.newPaymentRequest(txId, storeId, token, usdTotal, convertUsdToXmr(usdTotal), returnUrl);
+            request = paymentRequestService.newPaymentRequest(txId, storeId, token, usdTotal, XmrConverter.convertUsdToPiconero(usdTotal), returnUrl);
         }
         catch (Exception e) {
             if (e instanceof PaymentRequestAlreadyExistsException) {

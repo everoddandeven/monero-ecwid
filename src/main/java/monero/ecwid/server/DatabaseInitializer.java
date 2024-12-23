@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +56,17 @@ public class DatabaseInitializer {
 
             logger.info("Successfully created monero_ecwid database");
         } catch (Exception e) {
-            logger.error("Errore durante l'inizializzazione del database: " + e.getMessage());
+            String msg = e.getMessage();
+
+            if (e instanceof BadSqlGrammarException) {
+                logger.error("Cannot initialize database: invalid syntax for schema");
+            }
+            else if (msg == null || msg.isEmpty()) {
+                logger.error("An unknown error occured during database initilization", e);
+            }
+            else {
+                logger.error("An error occured during database initilization: " + msg);
+            }
         }
     }
 
@@ -66,9 +77,8 @@ public class DatabaseInitializer {
             String query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
             String result = jdbcTemplate.queryForObject(query, new Object[]{dbName}, String.class);
 
-            return result != null; // Il database esiste
+            return result != null;
         } catch (Exception e) {
-            // Se si verifica un errore, presumiamo che il database non esista
             return false;
         }
     }
@@ -78,7 +88,7 @@ public class DatabaseInitializer {
             String sql = readResource(sqlFile);
             if (!sql.isBlank()) {
                 jdbcTemplate.execute(sql);
-                logger.info("Eseguito file SQL: " + sqlFile.getFilename());
+                logger.info("Executed SQL file: " + sqlFile.getFilename());
             }
         }
     }

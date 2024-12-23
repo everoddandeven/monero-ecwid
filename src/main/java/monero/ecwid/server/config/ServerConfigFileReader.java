@@ -9,10 +9,14 @@ import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public abstract class ServerConfigFileReader {
+    private static final Logger logger = LoggerFactory.getLogger(ServerConfigFileReader.class);
 
     public static String getConfigFilePath() {
         return System.getProperty("config-file", "moneroecwid.conf");
@@ -67,9 +71,9 @@ public abstract class ServerConfigFileReader {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.trim().isEmpty() || line.startsWith("#")) {
-                    continue; // Ignora linee vuote o commenti
+                    continue;
                 }
-                String[] keyValue = line.split("=", 2); // Dividi su "="
+                String[] keyValue = line.split("=", 2);
                 if (keyValue.length == 2) {
                     configMap.put(keyValue[0].trim(), keyValue[1].trim());
                 }
@@ -83,19 +87,20 @@ public abstract class ServerConfigFileReader {
         File configFile = new File(configFilePath);
 
         if (!configFile.exists()) {
-            System.out.println("File di configurazione non trovato, creazione di un nuovo file con valori di default...");
+            logger.info("File di configurazione non trovato, creazione di un nuovo file con valori di default...");
+
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(configFile))) {
-                writer.write("# Configurazione default per Monero ECWID Server\n");
+                writer.write("# Default Monero Ecwid configuration\n");
                 writer.write("db-host=localhost\n");
                 writer.write("db-port=3306\n");
                 writer.write("db-username=monero_ecwid\n");
-                writer.write("db-password=\n");
+                writer.write("db-password=devpassword\n");
                 writer.write("required-confirmations=10\n");
                 writer.write("wallet-address=\n");
                 writer.write("wallet-view-key=\n");
-                writer.write("wallet-server-uri=\n");
-                writer.write("wallet-password=\n");
-                writer.write("wallet-net-type=\n");
+                writer.write("wallet-server-uri=http://node2.monerodevs.org:28089\n");
+                writer.write("wallet-password=supersecretpassword123\n");
+                writer.write("wallet-net-type=testnet\n");
                 writer.write("client-secret=\n");
             }
         }
