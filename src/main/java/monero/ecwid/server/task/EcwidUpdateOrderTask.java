@@ -59,6 +59,16 @@ public class EcwidUpdateOrderTask implements ServerTask {
     
             if (status.equals("EXPIRED")) {
                 storeService.setOrderCancelled(txId);
+                
+                if (mailService.isEnabled()) {
+                    try {
+                        mailService.sendCancelledReceipt(paymentRequest);
+                    }
+                    catch(Exception e) {
+                        logger.warn("Could not send expired receipt email");
+                    }
+                }
+
                 updated = true;
             }
             else if (status.equals("PAID")) {
@@ -66,7 +76,12 @@ public class EcwidUpdateOrderTask implements ServerTask {
                     storeService.setOrderPaid(txId);
 
                     if (mailService.isEnabled()) {
-                        mailService.sendReceipt(paymentRequest);
+                        try {
+                            mailService.sendReceipt(paymentRequest);
+                        }
+                        catch(Exception e) {
+                            logger.warn("Could not send receipt email");
+                        }
                     }
 
                     updated = true;
@@ -77,6 +92,16 @@ public class EcwidUpdateOrderTask implements ServerTask {
             }
             else if (status.equals("CANCELLED")) {
                 storeService.setOrderCancelled(txId);
+
+                if (mailService.isEnabled()) {
+                    try {
+                        mailService.sendCancelledReceipt(paymentRequest);;
+                    }
+                    catch(Exception e) {
+                        logger.warn("Could not send cancelled receipt email");
+                    }
+                }
+
                 updated = true;
             }
     

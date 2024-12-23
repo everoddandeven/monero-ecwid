@@ -169,5 +169,5 @@ public class GatewayController {
 
         throw new Exception("Request " + id + " not found");
     }
-
+    
 }

@@ -133,7 +133,11 @@ public abstract class WalletUtils {
     }
 
     public static Long getTxConfirmations(String txHash) {
-        Long confirmations = getWallet().getTx(txHash).getNumConfirmations();
+        return getTxConfirmations(txHash, false);
+    }
+
+    public static Long getTxConfirmations(String txHash, boolean sync) {
+        Long confirmations = getWallet(sync).getTx(txHash).getNumConfirmations();
 
         if (confirmations == null) {
             return Long.valueOf(0l);
