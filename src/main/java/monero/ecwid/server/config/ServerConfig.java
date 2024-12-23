@@ -17,6 +17,7 @@ public class ServerConfig {
     public String walletPassword = "";
     public String walletNetType = "testnet";
     public String walletServerUri = "";
+    public Long walletRestoreHeight = Long.valueOf(0);
     public String clientSecret = "";
     
     public String mailHost = "";

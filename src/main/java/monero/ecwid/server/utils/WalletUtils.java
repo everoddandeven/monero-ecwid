@@ -21,7 +21,6 @@ public abstract class WalletUtils {
 
     private static MoneroWalletFull wallet = null;
     private static String walletPath = "monero_ecwid_wallet";
-    private static final Long restoreHeight = 2644330l;
 
     private static ServerConfig getServerConfig() {
         try {
@@ -34,12 +33,14 @@ public abstract class WalletUtils {
 
     private static MoneroWalletConfig getWalletConfig() {
         ServerConfig serverConfig = getServerConfig();
+        Long restoreHeight = serverConfig.walletRestoreHeight;
         String address = serverConfig.walletAddress;
         String viewKey = serverConfig.walletViewKey;
-        String walletPassword = serverConfig.walletPassword.isEmpty() ? "supersecretpassword123" : serverConfig.walletAddress;
+        String walletPassword = serverConfig.walletPassword.isEmpty() ? "supersecretpassword123" : serverConfig.walletPassword;
         boolean validConfig = !address.isEmpty() && !viewKey.isEmpty() && !walletPassword.isEmpty();
         MoneroNetworkType networkType = serverConfig.getNetType();
         String serverUri;
+        
 
         if (serverConfig.walletServerUri.isEmpty()) {
             serverUri = networkType == MoneroNetworkType.TESTNET ? TESTNET_NODE : networkType == MoneroNetworkType.STAGENET ? STAGENET_NODE : MAINNET_NODE;
@@ -53,15 +54,16 @@ public abstract class WalletUtils {
             .setPassword(walletPassword)
             .setNetworkType(networkType)
             .setServerUri(serverUri);
-        
+
         if (!MoneroWalletFull.walletExists(walletPath)) {
             if (validConfig) {
-                config.setPrimaryAddress(address);
-                config.setPrivateViewKey(viewKey);
+                config
+                    .setPrimaryAddress(address)
+                    .setPrivateViewKey(viewKey)
+                    .setRestoreHeight(restoreHeight);
             }
             else {
-                config.setSeed("archer frying slid pruned smuggled elapse touchy assorted cogs sabotage orders directed together aching bikini eels bubble else rigid toenail tweezers alpine energy entrance alpine");
-                config.setRestoreHeight(restoreHeight);
+                throw new RuntimeException("Invalid wallet config provided");
             }
         }
 
@@ -102,6 +104,9 @@ public abstract class WalletUtils {
 
         if (sync) {
             logger.info("Syncing wallet");
+
+            ServerConfig serverConfig = getServerConfig();
+            Long restoreHeight = serverConfig.walletRestoreHeight;
 
             wallet.sync(restoreHeight);
 
@@ -145,4 +150,5 @@ public abstract class WalletUtils {
 
         return confirmations;
     }
+
 }

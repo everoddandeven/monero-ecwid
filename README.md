@@ -86,17 +86,23 @@ You must provide a valid configuration before running server
 
    ```bash
    # moneroecwid.conf example
+   port=8080
    db-host=localhost
    db-port=3306
    db-username=monero_ecwid
    db-password=devpassword
    required-confirmations=1
-   client-secret=custom_app_client_secret
+   client-secret=Pe087Q6jr0CgwI96R2ZTuUMWfUAHQjMq
    wallet-address=9xjCAvNQaYYDLc5UsxQPZtP8nNDUJnuhiacmMaE3zzTBetYcLusyCtD5kuQNNGo3TVCEUFKjd7yjeE3rCjPahy3RQGa39aJ
    wallet-view-key=9ce15a203d7e31aa930e55e4bf18e65509fb73ba316528182b77b079bb997b0d
    wallet-server-uri=http://node2.monerodevs.org:28089
    wallet-password=supersecretpassword123
    wallet-net-type=testnet
+   wallet-restore-height=2644330
+   mail-host=smtp.mailgun.org
+   mail-port=587
+   mail-username=
+   mail-password=
    ```
 
    ```bash
