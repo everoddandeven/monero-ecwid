@@ -6,6 +6,7 @@ public class ServerConfig {
 
     private static ServerConfig config = null;
     
+    public Integer port = 8080;
     public String dbHost = "localhost";
     public Integer dbPort = 3306;
     public String dbUsername = "monero_ecwid";

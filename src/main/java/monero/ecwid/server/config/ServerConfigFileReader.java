@@ -46,6 +46,7 @@ public abstract class ServerConfigFileReader {
         String mailPort = rawConfig.getOrDefault("mail-port", "");
         String mailUsername = rawConfig.getOrDefault("mail-username", "");
         String mailPassword = rawConfig.getOrDefault("mail-password", "");
+        String serverPort = rawConfig.getOrDefault("port", "8080");
 
         Integer port = Integer.valueOf(dbPort);
         Long confirmations = Long.valueOf(reqConfirmations);
@@ -60,14 +61,16 @@ public abstract class ServerConfigFileReader {
         config.walletViewKey = walletViewKey;
         config.walletPassword = walletPassword;
         config.walletNetType = walletNetType;
+        config.walletServerUri = walletServerUri;
+
         config.clientSecret = clientSecret;
 
         config.mailHost = mailHost;
         config.mailPort = Integer.valueOf(mailPort);
         config.mailUsername = mailUsername;
         config.mailPassword = mailPassword;
-
-        config.walletServerUri = walletServerUri;
+        
+        config.port = Integer.valueOf(serverPort);
 
         return config;
     }
