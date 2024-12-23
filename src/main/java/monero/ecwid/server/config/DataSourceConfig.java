@@ -32,7 +32,7 @@ public class DataSourceConfig {
 
         String host = config.dbHost;
         String port = config.dbPort.toString();
-        return String.format("jdbc:mysql://%s:%s/monero_ecwid", host, port);
+        return String.format("jdbc:mysql://%s:%s/monero_ecwid?createDatabaseIfNotExist=true", host, port);
     }
 
     @Bean

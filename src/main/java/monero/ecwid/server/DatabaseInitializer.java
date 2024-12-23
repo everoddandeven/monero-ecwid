@@ -12,13 +12,14 @@ import jakarta.annotation.PostConstruct;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class DatabaseInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);
+    private static final String customDelimiter = "$$";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -53,8 +54,8 @@ public class DatabaseInitializer {
             }
 
             executeSqlFiles(List.of(databaseScript, functionsScript, proceduresScript, viewsScript, triggersScript, eventsScript));
-
             logger.info("Successfully created monero_ecwid database");
+
         } catch (Exception e) {
             String msg = e.getMessage();
 
@@ -77,25 +78,91 @@ public class DatabaseInitializer {
             String query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
             String result = jdbcTemplate.queryForObject(query, new Object[]{dbName}, String.class);
 
-            return result != null;
+            if (result == null) {
+                return false;
+            }
+
+            String checkTableQuery = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN (?, ?)";
+            Integer tableCount = jdbcTemplate.queryForObject(checkTableQuery, new Object[]{dbName, "payment_requests", "monero_transactions"}, Integer.class);
+    
+            if (tableCount == null) {
+                return false;
+            }
+            else if (tableCount.equals(Integer.valueOf(2))) {
+                logger.info("Database monero_ecwid exists.");
+                return true;
+            } else {
+                logger.warn("Database is empty.");
+                return false;
+            }
         } catch (Exception e) {
             return false;
         }
     }
 
+    private void executeStatement(Statement statement, String sql) throws Exception {
+        statement.execute(sql.replace(customDelimiter, ""));
+    }
+
+    private void executeSqlFile(Resource resource) throws Exception {
+        try (
+            Connection connection = jdbcTemplate.getDataSource().getConnection();
+            Statement statement = connection.createStatement();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))
+        ) {
+            StringBuilder sqlBuilder = new StringBuilder();
+            String line;
+
+            boolean insideDelimiter = false;
+            
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+    
+                if (line.isEmpty() || line.startsWith("--") || line.startsWith("#")) {
+                    continue;
+                }
+    
+                if (line.toUpperCase().startsWith("DELIMITER")) {
+                    if (insideDelimiter) {
+                        insideDelimiter = false;
+
+                        if (sqlBuilder.length() != 0) {
+                            String sql = sqlBuilder.toString().trim();
+                            executeStatement(statement, sql);
+                            System.out.println("Eseguito blocco SQL:\n" + sql);
+                            sqlBuilder.setLength(0);
+                        }
+                    }
+                    else {
+                        insideDelimiter = true;
+                    }
+
+                    continue;
+                }
+
+                sqlBuilder.append(line).append(" ");
+    
+                if (line.endsWith(";") && ! insideDelimiter) {
+                    String sql = sqlBuilder.toString().trim();
+                    executeStatement(statement, sql);    
+                    sqlBuilder.setLength(0);
+                }
+            }
+        
+            if (sqlBuilder.length() != 0) {
+                String sql = sqlBuilder.toString().trim();
+                executeStatement(statement, sql);
+                sqlBuilder.setLength(0);
+            }
+        } catch (Exception e) {
+            throw new Exception("An error occured while executing sql file SQL: " + resource.getFilename(), e);
+        }
+    }
+    
     private void executeSqlFiles(List<Resource> sqlFiles) throws Exception {
         for (Resource sqlFile : sqlFiles) {
-            String sql = readResource(sqlFile);
-            if (!sql.isBlank()) {
-                jdbcTemplate.execute(sql);
-                logger.info("Executed SQL file: " + sqlFile.getFilename());
-            }
+            executeSqlFile(sqlFile);
         }
     }
 
-    private String readResource(Resource resource) throws Exception {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
-            return reader.lines().collect(Collectors.joining("\n"));
-        }
-    }
 }
