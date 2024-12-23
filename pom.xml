@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>io.github.woodser</groupId>
 			<artifactId>monero-java</artifactId>
-			<version>0.8.31</version>
+			<version>0.8.33</version>
 		</dependency>
 		
 	</dependencies>
