@@ -53,8 +53,11 @@ public class PaymentRequestEntity {
     @Column(name = "ecwid_api_updated", nullable = false)
     private boolean ecwidApiUpdated = false;
 
-    private Long blokchainHeight = 0l;
+    @Transient
+    private Long blockchainHeight = 0l;
+    @Transient
     private Long confirmations = 0l;
+    @Transient
     private Long requiredConfirmations = 0l;
 
     public String getTxId() {
@@ -214,11 +217,11 @@ public class PaymentRequestEntity {
     }
 
     public Long getBlockchainHeight() {
-        return blokchainHeight;
+        return blockchainHeight;
     }
 
     public void setBlockchainHeight(Long value) {
-        blokchainHeight = value;
+        blockchainHeight = value;
     }
 
     public Long getConfirmations() {
