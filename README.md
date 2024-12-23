@@ -1,6 +1,7 @@
 # Monero ECWID
 
 [![License][license-badge]](LICENSE.md)
+[![Build](https://github.com/everoddandeven/monero-ecwid/actions/workflows/build.yml/badge.svg)](https://github.com/everoddandeven/monero-ecwid/actions/workflows/build.yml)
 [![XMR Donated](https://img.shields.io/badge/donated-0_XMR-blue?logo=monero)](https://github.com/everoddandeven/monero-ecwid?tab=readme-ov-file#monero)
 
 This project provides a payment integration solution for Ecwid stores using Monero as a payment method. It leverages the [monero-java API](https://github.com/woodser/monero-java) for seamless integration, ensuring secure and private payments.
