@@ -20,6 +20,7 @@ import monero.ecwid.server.config.ServerConfig;
 import monero.ecwid.server.config.ServerConfigFileReader;
 import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
 import monero.ecwid.server.repository.PaymentRequestEntity;
+import monero.ecwid.server.service.MailService;
 import monero.ecwid.server.service.PaymentRequestService;
 
 import org.springframework.ui.Model;
@@ -32,8 +33,12 @@ public class GatewayController {
     @Autowired
     private final PaymentRequestService paymentRequestService;
 
-    public GatewayController(PaymentRequestService paymentRequestService) {
+    @Autowired
+    private final MailService mailService;
+
+    public GatewayController(PaymentRequestService paymentRequestService, MailService mailService) {
         this.paymentRequestService = paymentRequestService;
+        this.mailService = mailService;
     }
 
     private static ServerConfig getServerConfig() {
@@ -77,6 +82,13 @@ public class GatewayController {
 
         try {
             request = paymentRequestService.newPaymentRequest(paymentData);
+            
+            try {
+                mailService.sendInvoince(request);
+            }
+            catch (Exception e) {
+                logger.warn("Could not send invoice email");
+            }
         }
         catch (Exception e) {
             if (e instanceof PaymentRequestAlreadyExistsException) {

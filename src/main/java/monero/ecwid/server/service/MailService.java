@@ -47,7 +47,7 @@ public class MailService {
                 """;
         
         private static final String Invoice = """
-                <h4>Monero Payment Invoince</h4>
+                <h4>Monero Payment Invoice</h4>
 
                 <br>
                 <strong>Order ID:</strong> {txId}
