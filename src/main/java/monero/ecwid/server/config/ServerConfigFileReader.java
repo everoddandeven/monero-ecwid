@@ -47,7 +47,7 @@ public abstract class ServerConfigFileReader {
         String mailUsername = rawConfig.getOrDefault("mail-username", "");
         String mailPassword = rawConfig.getOrDefault("mail-password", "");
         String serverPort = rawConfig.getOrDefault("port", "8080");
-        String walletRestoreHeight = rawConfig.getOrDefault("walletRestoreHeight", "0");
+        String walletRestoreHeight = rawConfig.getOrDefault("wallet-restore-height", "0");
 
         Integer port = Integer.valueOf(dbPort);
         Long confirmations = Long.valueOf(reqConfirmations);
