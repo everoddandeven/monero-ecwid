@@ -1,0 +1,10 @@
+[Unit]
+Description=Monero Ecwid Payment Gateway
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/java -jar /opt/moneroecwid/monero-ecwid-0.0.1-SNAPSHOT.jar --config-file=/etc/moneroecwid.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

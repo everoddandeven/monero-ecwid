@@ -42,7 +42,8 @@ jobs:
         sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo cmake . && sudo make
         sudo mv lib/libg* /usr/lib/
         cd 
-        sudo apt install -y build-essential maven cmake pkg-config libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libexpat1-dev libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev libboost-all-dev libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev libboost-locale-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev python3 ccache doxygen graphviz nettle-dev libevent-dev
+        sudo apt install -y build-essential ruby ruby-dev maven cmake pkg-config libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libexpat1-dev libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev libboost-all-dev libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev libboost-locale-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev python3 ccache doxygen graphviz nettle-dev libevent-dev
+        sudo gem install --no-document fpm
     
     - name: Install expat depencency
       run: |
@@ -84,3 +85,25 @@ jobs:
       with:
         name: monero-ecwid
         path: target/*.jar
+
+    - name: Build DEB package
+      run: |
+        mkdir -p ./build/opt/monero-ecwid
+        mkdir -p ./build/etc/
+        mkdir -p ./build/etc/systemd/system
+        cp moneroecwid.conf ./build/etc/
+        cp ./target/*.jar ./build/opt/monero-ecwid/
+        cp moneroecwid.service ./build/etc/systemd/system/
+
+        fpm -s dir -t deb -n monero-ecwid \
+          -v 1.0.0 \
+          --prefix / \
+          --description "Monero payment gateway for ECWID stores" \
+          --deb-systemd moneroecwid.service \
+          ./build
+
+    - name: Upload DEB package
+      uses: actions/upload-artifact@v4
+      with:
+        name: monero-ecwid-deb-installer
+        path: ./*.deb
