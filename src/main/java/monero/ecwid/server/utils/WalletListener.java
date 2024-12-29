@@ -27,6 +27,11 @@ public class WalletListener extends MoneroWalletListener {
         String txHash = output.getTx().getHash();
         Boolean isConfirmed = output.getTx().isConfirmed();
         Long confirmations = output.getTx().getNumConfirmations();
+        
+        if (output.isLocked()) {
+            logger.info("Ignoring locked output: " + output.getStealthPublicKey());
+            return;
+        }
 
         Optional<MoneroTransactionEntity> moneroTransaction = this.paymentRequestService.transactionRepository.findById(txHash);
 
