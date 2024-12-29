@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import monero.ecwid.model.EcwidPaymentData;
+import monero.ecwid.server.config.ServerConfig;
 import monero.ecwid.server.error.PaymentRequestAlreadyExistsException;
 import monero.ecwid.server.repository.MoneroTransactionEntity;
 import monero.ecwid.server.repository.MoneroTransactionRepository;
@@ -37,10 +38,15 @@ public class PaymentRequestService {
 
     public PaymentRequestService(PaymentRequestRepository repository, MoneroTransactionRepository transactionRepository) {
         this.repository = repository;
-        this.wallet = WalletUtils.getWallet();
+        this.wallet = WalletUtils.getWallet(false);
         this.walletListener = new WalletListener(this);
         this.wallet.addListener(walletListener);
         this.transactionRepository = transactionRepository;
+
+        Long restoreHeight = ServerConfig.getServerConfig().walletRestoreHeight;
+
+        this.wallet.sync(restoreHeight);
+        this.wallet.startSyncing();
     }
 
     public List<PaymentRequestEntity> getAll() {
